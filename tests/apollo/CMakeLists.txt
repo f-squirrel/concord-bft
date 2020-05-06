@@ -1,11 +1,11 @@
 set(APOLLO_TEST_ENV "BUILD_ROCKSDB_STORAGE=${BUILD_ROCKSDB_STORAGE}")
+set(MINIO_BINARY_PATH "$ENV{HOME}/minio")
 
 if(USE_S3_OBJECT_STORE)
         find_program(CHMOD_PROG chmod)
         if(NOT CHMOD_PROG)
                 message(FATAL_ERROR "chmod not found")
         endif()
-        set(MINIO_BINARY_PATH "$ENV{HOME}/minio")
         if(NOT EXISTS ${MINIO_BINARY_PATH})
             message(STATUS "Minio does not exsit in ${MINIO_BINARY_PATH}")
         endif()
