@@ -87,6 +87,7 @@ target_include_directories(corebft PRIVATE src/bftengine)
 target_include_directories(corebft PRIVATE src/preprocessor)
 target_include_directories(corebft PRIVATE util/include)
 target_include_directories(corebft PUBLIC ${CRYPTOPP_INCLUDE_DIRS})
+
 target_link_libraries(corebft PUBLIC
   threshsign
   Threads::Threads
@@ -100,4 +101,3 @@ target_include_directories(bftclient PUBLIC include/bftengine)
 target_include_directories(bftclient PUBLIC src/bftengine)
 target_include_directories(bftclient PUBLIC src/preprocessor)
 target_link_libraries(bftclient PUBLIC bftcommunication)
-

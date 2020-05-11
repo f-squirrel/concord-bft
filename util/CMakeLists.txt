@@ -8,7 +8,8 @@ add_library(util STATIC
     src/histogram.cpp
     src/status.cpp
     src/sliver.cpp
-    src/hex_tools.cpp)
+    src/hex_tools.cpp
+    src/OpenTracing.cpp)
 
 if(BUILD_ROCKSDB_STORAGE)
     target_compile_definitions(util PUBLIC "USE_ROCKSDB=1")
@@ -16,6 +17,12 @@ endif()
 
 target_link_libraries(util PUBLIC Threads::Threads)
 target_include_directories(util PUBLIC include)
+
+if (USE_OPENTRACING)
+  find_package(OpenTracing REQUIRED)
+  target_include_directories(util PUBLIC ${OPENTRACING_INCLUDE_DIRS})
+  target_link_libraries(util PUBLIC ${OPENTRACING_LIBRARIES})
+endif()
 
 if (BUILD_TESTING)
     add_subdirectory(pyclient)

@@ -21,6 +21,7 @@
 #include "MsgHandlersRegistrator.hpp"
 #include "ReplicaLoader.hpp"
 #include "PersistentStorage.hpp"
+#include "OpenTracing.hpp"
 
 #include "messages/ClientRequestMsg.hpp"
 #include "messages/PrePrepareMsg.hpp"
@@ -132,6 +133,11 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
   const bool readOnly = m->isReadOnly();
   const ReqId reqSeqNum = m->requestSeqNum();
   const uint8_t flags = m->flags();
+
+  concordUtils::opentracing::SpanWrapper span =
+      concordUtils::opentracing::fromContext(m->spanContext<ClientRequestMsg>(), "bft_client_request");
+
+  span.setTag("cid", m->getCid());
 
   MDC_CID_PUT(GL, m->getCid());
   LOG_DEBUG_F(GL,
