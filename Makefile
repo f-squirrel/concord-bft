@@ -2,7 +2,7 @@ CONCORD_BFT_DOCKER_REPO:=fsquirrel
 CONCORD_BFT_DOCKER_IMAGE:=concord-bft
 CONCORD_BFT_DOCKER_IMAGE_VERSION:=0.1
 
-CONCORD_BFT_DOCKERFILE:=DockerfilePrereqs
+CONCORD_BFT_DOCKERFILE:=Dockerfile
 CONCORD_BFT_BUILD_DIR:=build
 CONCORD_BFT_TARGET_SOURCE_PATH:=/concord-bft
 CONCORD_BFT_CONTAINER_SHELL:=/bin/bash
@@ -30,13 +30,14 @@ help: ## The Makefile helps to build Concord-BFT in a docker container
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 	# Basic HOW-TO:
-	# make pull     # Pull image from Docker Hub
-	# make build-s  # Build Concord-BFT sources
-	# make test     # Run tests
-	# make remove-c # Remove existing container
-	# make build-nc # Build docker image locally
+	# make pull               # Pull image from Docker Hub
+	# make run-c              # Run container in background
+	# make build-s            # Build Concord-BFT sources
+	# make test               # Run tests
+	# make remove-c           # Remove existing container
+	# make build-docker-image # Build docker image locally
 
-build-nc: ## Re-build the container without caching
+build-docker-image: ## Re-build the container without caching
 	docker build --rm --no-cache=true -t ${CONCORD_BFT_DOCKER_IMAGE} \
 		-f ./${CONCORD_BFT_DOCKERFILE} .
 
@@ -67,7 +68,7 @@ build-s: ## Build Concord-BFT source. Note: this command is mostly for developer
 		CC=${CONCORD_BFT_CONTAINER_CC} CXX=${CONCORD_BFT_CONTAINER_CXX} \
 		cmake ${CONCORD_BFT_CMAKE_FLAGS} .. && \
 		make format-check && \
-		make -j8"
+		make -j $$(nproc)"
 
 test: ## Run all tests
 	docker exec -it --workdir=${CONCORD_BFT_TARGET_SOURCE_PATH} ${CONCORD_BFT_DOCKER_IMAGE} \
