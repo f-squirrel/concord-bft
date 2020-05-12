@@ -134,8 +134,9 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
   const ReqId reqSeqNum = m->requestSeqNum();
   const uint8_t flags = m->flags();
 
-  concordUtils::opentracing::SpanWrapper span =
-      concordUtils::opentracing::fromContext(m->spanContext<ClientRequestMsg>(), "bft_client_request");
+  LOG_INFO(GL, "Replica received span: " << m->spanContext<ClientRequestMsg>());
+  concordUtils::SpanWrapper span =
+      concordUtils::fromContext(m->spanContext<ClientRequestMsg>(), "bft_client_request");
 
   span.setTag("cid", m->getCid());
 

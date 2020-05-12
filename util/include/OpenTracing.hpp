@@ -9,7 +9,7 @@
 #include <string_view>
 #include <strstream>
 
-namespace concordUtils::opentracing {
+namespace concordUtils {
 
 using SpanContext = std::string;
 
@@ -25,9 +25,12 @@ class SpanWrapper {
   SpanWrapper& operator=(const SpanWrapper&) = delete;
   SpanWrapper(SpanWrapper&&) = default;
   SpanWrapper& operator=(SpanWrapper&&) = default;
-  void setTag(std::string_view name, std::string_view value);
+  void setTag(const std::string& name, const std::string& value);
   void Finish();
 
+  friend SpanWrapper startSpan(const std::string& operation_name);
+  friend SpanWrapper startChildSpan(const std::string& operation_name, const SpanWrapper& parent_span);
+  friend SpanWrapper fromContext(const SpanContext& context, const std::string& child_operation_name);
   friend SpanContext toContext(const SpanWrapper& wrapper);
 
  private:
@@ -37,9 +40,9 @@ class SpanWrapper {
   SpanPtr span_ptr_;
 };
 
-SpanWrapper startSpan(std::string_view operation_name);
-SpanWrapper startChildSpan(std::string_view operation_name, const SpanWrapper& parent_span);
-SpanWrapper fromContext(const SpanContext& context, std::string_view child_operation_name);
+SpanWrapper startSpan(const std::string& operation_name);
+SpanWrapper startChildSpan(const std::string& operation_name, const SpanWrapper& parent_span);
+SpanWrapper fromContext(const SpanContext& context, const std::string& child_operation_name);
 SpanContext toContext(const SpanWrapper& wrapper);
-}  // namespace concordUtils::opentracing
+}  // namespace concordUtils
 #endif /* end of include guard: OPENTRACING_UTILS_HPP */

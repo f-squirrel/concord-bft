@@ -1,11 +1,14 @@
 #include "OpenTracing.hpp"
+#include "Logger.hpp"
 #include <string_view>
 
-namespace concordUtils::opentracing {
-void SpanWrapper::setTag(std::string_view name, std::string_view value) {
+namespace concordUtils {
+void SpanWrapper::setTag(const std::string& name, const std::string& value) {
 #ifdef USE_OPENTRACING
-  span_ptr_->setTag(name, value);
+  LOG_INFO(GL, "Set tag: " << name << ":" << value);
+  span_ptr_->SetTag(name, value);
 #else
+  LOG_INFO(GL, "Set tag ignored");
   (void)name;
   (void)value;
 #endif
@@ -17,7 +20,7 @@ void SpanWrapper::Finish() {
 #endif
 }
 
-SpanWrapper startSpan(std::string_view operation_name) {
+SpanWrapper startSpan(const std::string& operation_name) {
 #ifdef USE_OPENTRACING
   auto tracer = opentracing::Tracer::Global();
   if (!tracer) {
@@ -32,15 +35,15 @@ SpanWrapper startSpan(std::string_view operation_name) {
 #endif
 }
 
-SpanWrapper startChildSpan(std::string_view operation_name, const SpanWrapper& parent_span) {
+SpanWrapper startChildSpan(const std::string& operation_name, const SpanWrapper& parent_span) {
 #ifdef USE_OPENTRACING
   auto tracer = opentracing::Tracer::Global();
   if (!tracer) {
     // Tracer is not initialized by the parent
     return SpanWrapper();
   } else {
-    return SpanWrapper{opentracing::Tracer::Global()->StartSpan(operation_name, {
-      opentracing::ChildOf(parent_span.span_impl->context())}};
+    return SpanWrapper{opentracing::Tracer::Global()->StartSpan(
+        operation_name, {opentracing::ChildOf(&parent_span.span_impl()->context())})};
   }
 #else
   (void)operation_name;
@@ -49,7 +52,7 @@ SpanWrapper startChildSpan(std::string_view operation_name, const SpanWrapper& p
 #endif
 }
 
-SpanWrapper fromContext(const SpanContext& context, std::string_view child_operation_name) {
+SpanWrapper fromContext(const SpanContext& context, const std::string& child_operation_name) {
 #ifdef USE_OPENTRACING
   auto tracer = opentracing::Tracer::Global();
   if (!tracer) {
@@ -76,7 +79,7 @@ SpanContext toContext(const SpanWrapper& wrapper) {
   auto tracer = opentracing::Tracer::Global();
   if (!tracer) {
     // Tracer is not initialized by the parent
-    return SpanWrapper();
+    return SpanContext();
   }
   std::ostringstream context;
   wrapper.span_impl()->tracer().Inject(wrapper.span_impl()->context(), context);
@@ -86,4 +89,4 @@ SpanContext toContext(const SpanWrapper& wrapper) {
   return SpanContext();
 #endif
 }
-}  // namespace concordUtils::opentracing
+}  // namespace concordUtils
