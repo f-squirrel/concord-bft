@@ -19,6 +19,7 @@ target_link_libraries(util PUBLIC Threads::Threads)
 target_include_directories(util PUBLIC include)
 
 if (USE_OPENTRACING)
+
   if (NOT DEFINED OPENTRACING_INCLUDE_DIR)
       find_path(OPENTRACING_INCLUDE_DIR NAMES opentracing/tracer.h)
   endif()
