@@ -13,6 +13,7 @@ env:
     DOCKER_IMAGE: concord-bft
     DOCKER_WORK_DIR: /concord-bft
     DOCKER_IMAGE_VER: 0.3
+    COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
     CMAKE_CXX_FLAGS: "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -g"
     USE_LOG4CPP: -DUSE_LOG4CPP=TRUE
     USE_ROCKSDB: -DBUILD_ROCKSDB_STORAGE=TRUE
@@ -35,6 +36,8 @@ jobs:
                 - "-DCMAKE_BUILD_TYPE=DEBUG -DCI_TEST_STORAGE_TYPE=v2merkle"
                 - "-DCMAKE_BUILD_TYPE=RELEASE -DCI_TEST_STORAGE_TYPE=v2merkle"
     steps:
+        - name: Print
+          run: echo $COVERITY_SCAN_TOKEN ; echo ${{ secrets.COVERITY_SCAN_TOKEN }}
         - name: Pull docker image
           run: docker pull ${{ env.DOCKER_REPO }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_IMAGE_VER }}
         - name: Checkout
@@ -70,6 +73,35 @@ jobs:
             make -j$(nproc) &&
             ctest --timeout 3000 --output-on-failure" 2>&1 | tee ${{ github.workspace }}/artifact/build.log ;
             exit ${PIPESTATUS[0]}
+        - name: Download coverity
+          run: |
+            wget https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=fconcord-bft" -O coverity_tool.tgz
+            mkdir coverity_tool && tar xf coverity_tool.tgz -C coverity_tool --strip-components=1
+        - name: Coverity scan
+          run: >
+            docker run --rm --privileged=true
+            --cap-add NET_ADMIN --cap-add=SYS_PTRACE --ulimit core=-1
+            --workdir=${{ env.DOCKER_WORK_DIR }} --name=${{ env.DOCKER_IMAGE }}
+            --mount type=bind,source=${PWD},target=${{ env.DOCKER_WORK_DIR }}
+            ${{ env.DOCKER_REPO }}/${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_IMAGE_VER }}
+            /bin/bash -c "mkdir coverityBuild && cd coverityBuild &&
+            ${{ matrix.compiler }}
+            cmake ${{ env.CMAKE_CXX_FLAGS }}
+            ${{ matrix.ci_build_type }}
+            ${{ env.USE_LOG4CPP }}
+            ${{ env.USE_ROCKSDB }}
+            ${{ env.USE_CONAN }}
+            ${{ env.USE_S3_OBJECT_STORE }} .. &&
+            ../coverity_tool/bin/cov-build --dir cov-int make;
+            tar czvf cov-int.tgz cov-int;"
+        - name: Upload coverity results
+          run: >
+            curl --form token=$COVERITY_SCAN_TOKEN
+            --form email=ddanilov@vmware.com
+            --form file=@coverityBuild/cov-int.tgz
+            --form version="master"
+            --form description=""
+            https://scan.coverity.com/builds?project=fconcord-bft
         - name: Prepare artifacts
           if: failure()
           run: |
