@@ -6,6 +6,10 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://travis-ci.com/vmware/concord-bft.svg?branch=master)](https://travis-ci.com/vmware/concord-bft)
 ![Build Status](https://github.com/f-squirrel/concord-bft/workflows/Build/badge.svg)
+<a href="https://scan.coverity.com/projects/fconcord-bft">
+  <img alt="Coverity Scan Build Status"
+       src="https://scan.coverity.com/projects/21246/badge.svg"/>
+</a>
 
 
 
