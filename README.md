@@ -61,7 +61,7 @@ sudo make test
 cd concord-bft
 make pull       # pull docker image with prerequisites
 make run-c      # run container in background
-make build-s    # build sources
+make build      # build sources
 make test       # run tests
 ```
 Run `make help` to see more commands.
