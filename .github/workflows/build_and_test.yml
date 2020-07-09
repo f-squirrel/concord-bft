@@ -31,7 +31,7 @@ jobs:
         - name: Build and test
         - shell: script -e -c {0}
           run: |
-            make build ${{ matrix.compiler }} ${{ matrix.ci_build_type }} OMIT_TEST_OUTPUT=-DOMIT_TEST_OUTPUT=OFF test 2>&1 | tee ${{ github.workspace }}/artifact/build.log;
+            unbuffer make build ${{ matrix.compiler }} ${{ matrix.ci_build_type }} OMIT_TEST_OUTPUT=-DOMIT_TEST_OUTPUT=OFF test 2>&1 | tee ${{ github.workspace }}/artifact/build.log;
             exit ${PIPESTATUS[0]}
         - name: Prepare artifacts
           if: failure()
