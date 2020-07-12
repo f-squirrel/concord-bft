@@ -307,7 +307,7 @@ class ReplicaImp : public InternalReplicaApi, public ReplicaForStateTransfer {
                                        bool ignorePreviousAcks = false);
   void sendAckIfNeeded(MessageBase* msg, const NodeIdType sourceNode, const SeqNum seqNum);
 
-  void tryToSendPrePrepareMsg(bool batchingLogic = false);
+  void tryToSendPrePrepareMsg(bool batchingLogic = false, concordUtils::SpanWrapper* parent_span = nullptr);
 
   void sendPartialProof(SeqNumInfo&);
 

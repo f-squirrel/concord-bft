@@ -256,7 +256,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
   delete m;
 }
 
-void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic) {
+void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic, concordUtils::SpanWrapper *parent_span) {
   Assert(isCurrentPrimary());
   Assert(currentViewIsActive());
 
@@ -339,7 +339,7 @@ void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic) {
   controller->onSendingPrePrepare((primaryLastUsedSeqNum + 1), firstPath);
 
   ClientRequestMsg *nextRequest = (!requestsQueueOfPrimary.empty() ? requestsQueueOfPrimary.front() : nullptr);
-  const auto &span_context = nextRequest ? nextRequest->spanContext<ClientRequestMsg>() : std::string{};
+  const auto &span_context = parent_span ? parent_span->context() : std::string{};
 
   PrePrepareMsg *pp = new PrePrepareMsg(
       config_.replicaId, curView, (primaryLastUsedSeqNum + 1), firstPath, span_context, primaryCombinedReqSize);
@@ -468,9 +468,7 @@ void ReplicaImp::onMessage<PrePrepareMsg>(PrePrepareMsg *msg) {
   SCOPED_MDC_SEQ_NUM(std::to_string(msgSeqNum));
   LOG_DEBUG(GL, KVLOG(msg->senderId(), msg->size()));
   auto span = concordUtils::startChildSpanFromContext(msg->spanContext<std::remove_pointer<decltype(msg)>::type>(),
-                                                      "handle_bft_preprepare");
-  span.setTag("rid", config_.replicaId);
-  span.setTag("seq_num", msgSeqNum);
+                                                      "bft_preprepare");
 
   if (!currentViewIsActive() && viewsManager->waitingForMsgs() && msgSeqNum > lastStableSeqNum) {
     Assert(!msg->isNull());  // we should never send (and never accept) null PrePrepare message
