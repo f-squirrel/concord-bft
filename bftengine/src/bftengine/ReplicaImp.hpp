@@ -307,15 +307,15 @@ class ReplicaImp : public InternalReplicaApi, public ReplicaForStateTransfer {
                                        bool ignorePreviousAcks = false);
   void sendAckIfNeeded(MessageBase* msg, const NodeIdType sourceNode, const SeqNum seqNum);
 
-  void tryToSendPrePrepareMsg(bool batchingLogic = false);
+  void tryToSendPrePrepareMsg(bool batchingLogic = false, concordUtils::SpanWrapper* parent_span = nullptr);
 
-  void sendPartialProof(SeqNumInfo&);
+  void sendPartialProof(SeqNumInfo& seq_num_info, concordUtils::SpanWrapper* parent_span = nullptr);
 
   void tryToStartSlowPaths();
 
   void tryToAskForMissingInfo();
 
-  void sendPreparePartial(SeqNumInfo&);
+  void sendPreparePartial(SeqNumInfo& sq_num_info, concordUtils::SpanWrapper* parent_span = nullptr);
   void sendCommitPartial(SeqNum);  // TODO(GG): the argument should be a ref to SeqNumInfo
 
   void executeReadOnlyRequest(concordUtils::SpanWrapper& parent_span, ClientRequestMsg* m);

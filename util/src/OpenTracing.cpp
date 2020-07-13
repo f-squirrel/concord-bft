@@ -34,6 +34,8 @@ SpanContext SpanWrapper::context() const {
 #endif
 }
 
+SpanContext getSpanContext(const concordUtils::SpanWrapper* span) { return span ? span->context() : SpanContext{}; }
+
 SpanWrapper startSpan(const std::string& operation_name) {
 #ifdef USE_OPENTRACING
   return SpanWrapper{opentracing::Tracer::Global()->StartSpan(operation_name)};

@@ -160,7 +160,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
   LOG_DEBUG(GL, "Received ClientRequestMsg. " << KVLOG(clientId, reqSeqNum, flags, senderId));
 
   const auto &span_context = m->spanContext<std::remove_pointer<decltype(m)>::type>();
-  auto span = concordUtils::startChildSpanFromContext(span_context, "bft_client_request");
+  auto span = concordUtils::startChildSpanFromContext(span_context, "bft_handle_client_request");
   span.setTag("rid", config_.replicaId);
   span.setTag("cid", m->getCid());
   span.setTag("seq_num", reqSeqNum);
@@ -169,6 +169,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
     LOG_INFO(GL,
              "ClientRequestMsg is ignored because this replica is collecting missing state from the other replicas. "
                  << KVLOG(reqSeqNum, clientId));
+    span.Log("msg", "Replica is in collecting state");
     delete m;
     return;
   }
@@ -182,6 +183,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
     std::ostringstream oss("ClientRequestMsg is invalid. ");
     oss << KVLOG(invalidClient, sentFromReplicaToNonPrimary);
     onReportAboutInvalidMessage(m, oss.str().c_str());
+    span.Log("msg", "Invalid message");
     delete m;
     return;
   }
@@ -194,6 +196,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
 
   if (!currentViewIsActive()) {
     LOG_INFO(GL, "ClientRequestMsg is ignored because current view is inactive. " << KVLOG(reqSeqNum, clientId));
+    span.Log("msg", "Current view is inactive");
     delete m;
     return;
   }
@@ -207,6 +210,9 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
         LOG_WARN(GL,
                  "ClientRequestMsg dropped. Primary reqeust queue is full. "
                      << KVLOG(clientId, reqSeqNum, requestsQueueOfPrimary.size()));
+
+        span.Log("error", true);
+        span.Log("msg", "Primary queue is full");
         delete m;
         return;
       }
@@ -216,13 +222,14 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
                                                         << "], senderId=" << senderId);
         requestsQueueOfPrimary.push(m);
         primaryCombinedReqSize += m->size();
-        tryToSendPrePrepareMsg(true);
+        tryToSendPrePrepareMsg(true, &span);
         return;
       } else {
         LOG_INFO(GL,
                  "ClientRequestMsg is ignored because: request is old, OR primary is current working on a request from "
                  "the same client. "
                      << KVLOG(clientId, reqSeqNum));
+        span.Log("msg", "Request is ignored");
       }
     } else {  // not the current primary
       if (clientsManager->noPendingAndRequestCanBecomePending(clientId, reqSeqNum)) {
@@ -237,6 +244,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
                  "ClientRequestMsg is ignored because: request is old, OR primary is current working on a request "
                  "from the same client. "
                      << KVLOG(clientId, reqSeqNum));
+        span.Log("msg", "Request is ignored");
       }
     }
   } else if (seqNumberOfLastReply == reqSeqNum) {
@@ -256,7 +264,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
   delete m;
 }
 
-void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic) {
+void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic, concordUtils::SpanWrapper *parent_span) {
   Assert(isCurrentPrimary());
   Assert(currentViewIsActive());
 
@@ -339,7 +347,8 @@ void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic) {
   controller->onSendingPrePrepare((primaryLastUsedSeqNum + 1), firstPath);
 
   ClientRequestMsg *nextRequest = (!requestsQueueOfPrimary.empty() ? requestsQueueOfPrimary.front() : nullptr);
-  const auto &span_context = nextRequest ? nextRequest->spanContext<ClientRequestMsg>() : std::string{};
+  // const auto &span_context = nextRequest ? nextRequest->spanContext<ClientRequestMsg>() : std::string{};
+  const auto &span_context = parent_span ? parent_span->context() : std::string{};
 
   PrePrepareMsg *pp = new PrePrepareMsg(
       config_.replicaId, curView, (primaryLastUsedSeqNum + 1), firstPath, span_context, primaryCombinedReqSize);
@@ -401,9 +410,9 @@ void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic) {
   if (firstPath == CommitPath::SLOW) {
     seqNumInfo.startSlowPath();
     metric_slow_path_count_.Get().Inc();
-    sendPreparePartial(seqNumInfo);
+    sendPreparePartial(seqNumInfo, parent_span);
   } else {
-    sendPartialProof(seqNumInfo);
+    sendPartialProof(seqNumInfo, parent_span);
   }
 }
 
@@ -511,11 +520,11 @@ void ReplicaImp::onMessage<PrePrepareMsg>(PrePrepareMsg *msg) {
       if (!slowStarted)  // TODO(GG): make sure we correctly handle a situation where StartSlowCommitMsg is handled
                          // before PrePrepareMsg
       {
-        sendPartialProof(seqNumInfo);
+        sendPartialProof(seqNumInfo, &span);
       } else {
         seqNumInfo.startSlowPath();
         metric_slow_path_count_.Get().Inc();
-        sendPreparePartial(seqNumInfo);
+        sendPreparePartial(seqNumInfo, &span);
         ;
       }
     }
@@ -689,7 +698,7 @@ void ReplicaImp::onMessage<StartSlowCommitMsg>(StartSlowCommitMsg *msg) {
   delete msg;
 }
 
-void ReplicaImp::sendPartialProof(SeqNumInfo &seqNumInfo) {
+void ReplicaImp::sendPartialProof(SeqNumInfo &seqNumInfo, concordUtils::SpanWrapper *parent_span) {
   PartialProofsSet &partialProofs = seqNumInfo.partialProofs();
 
   if (!seqNumInfo.hasPrePrepareMsg()) return;
@@ -717,7 +726,7 @@ void ReplicaImp::sendPartialProof(SeqNumInfo &seqNumInfo) {
       Digest tmpDigest;
       Digest::calcCombination(ppDigest, curView, seqNum, tmpDigest);
 
-      const auto &span_context = pp->spanContext<std::remove_pointer<decltype(pp)>::type>();
+      const auto &span_context = concordUtils::getSpanContext(parent_span);
       part = new PartialCommitProofMsg(
           config_.replicaId, curView, seqNum, commitPath, tmpDigest, commitSigner, span_context);
       partialProofs.addSelfMsgAndPPDigest(part, tmpDigest);
@@ -743,7 +752,7 @@ void ReplicaImp::sendPartialProof(SeqNumInfo &seqNumInfo) {
   }
 }
 
-void ReplicaImp::sendPreparePartial(SeqNumInfo &seqNumInfo) {
+void ReplicaImp::sendPreparePartial(SeqNumInfo &seqNumInfo, concordUtils::SpanWrapper *parent_span) {
   Assert(currentViewIsActive());
 
   if (seqNumInfo.getSelfPreparePartialMsg() == nullptr && seqNumInfo.hasPrePrepareMsg() && !seqNumInfo.isPrepared()) {
@@ -753,7 +762,7 @@ void ReplicaImp::sendPreparePartial(SeqNumInfo &seqNumInfo) {
 
     LOG_DEBUG(GL, "Sending PreparePartialMsg. " << KVLOG(pp->seqNumber()));
 
-    const auto &span_context = pp->spanContext<std::remove_pointer<decltype(pp)>::type>();
+    const auto &span_context = concordUtils::getSpanContext(parent_span);
     PreparePartialMsg *p = PreparePartialMsg::create(curView,
                                                      pp->seqNumber(),
                                                      config_.replicaId,

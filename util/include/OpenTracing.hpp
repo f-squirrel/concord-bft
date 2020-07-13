@@ -13,6 +13,7 @@
 #ifndef OPENTRACING_UTILS_HPP
 #define OPENTRACING_UTILS_HPP
 
+#include <string_view>
 #ifdef USE_OPENTRACING
 #include <memory>
 #include <opentracing/span.h>
@@ -53,6 +54,18 @@ class SpanWrapper {
 #endif
   }
 
+  template <typename ValueT>
+  void Log(const std::string& key, const ValueT& value) {
+#ifdef USE_OPENTRACING
+    if (!span_ptr_) {
+      return;
+    }
+    span_ptr_->Log({{key, value}});
+#else
+    (void)fields;
+#endif
+  }
+
   void finish();
   SpanContext context() const;
 
@@ -67,10 +80,12 @@ class SpanWrapper {
  private:
   SpanWrapper(SpanPtr&& span) : span_ptr_(std::move(span)) {}
 
+ public:
   SpanPtr span_ptr_;
 #endif
-};
+};  // namespace concordUtils
 
+SpanContext getSpanContext(const concordUtils::SpanWrapper* span);
 SpanWrapper startSpan(const std::string& operation_name);
 SpanWrapper startChildSpan(const std::string& child_operation_name, const SpanWrapper& parent_span);
 SpanWrapper startChildSpanFromContext(const SpanContext& context, const std::string& child_operation_name);

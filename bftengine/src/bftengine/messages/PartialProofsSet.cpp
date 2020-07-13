@@ -238,7 +238,7 @@ class AsynchProofCreationJob : public util::SimpleThreadPool::Job {
     } else {
       LOG_DEBUG(CNSUS, "Created FullProof, sending full commit proof");
       FullCommitProofMsg* fcpMsg = new FullCommitProofMsg(
-          me->getReplicasInfo().myId(), view, seqNumber, bufferForSigComputations, (uint16_t)sigLength, span_context_);
+          me->getReplicasInfo().myId(), view, seqNumber, bufferForSigComputations, (uint16_t)sigLength, span.context());
       me->getIncomingMsgsStorage().pushInternalMsg(fcpMsg);
     }
 
