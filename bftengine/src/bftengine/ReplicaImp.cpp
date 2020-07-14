@@ -206,6 +206,7 @@ void ReplicaImp::onMessage<ClientRequestMsg>(ClientRequestMsg *m) {
   if (seqNumberOfLastReply < reqSeqNum) {
     if (isCurrentPrimary()) {
       // TODO(GG): use config/parameter
+      span.Log("primary", true);
       if (requestsQueueOfPrimary.size() >= 700) {
         LOG_WARN(GL,
                  "ClientRequestMsg dropped. Primary reqeust queue is full. "
@@ -410,8 +411,10 @@ void ReplicaImp::tryToSendPrePrepareMsg(bool batchingLogic, concordUtils::SpanWr
   if (firstPath == CommitPath::SLOW) {
     seqNumInfo.startSlowPath();
     metric_slow_path_count_.Get().Inc();
+    parent_span->Log("path", CommitPathToMDCString(firstPath));
     sendPreparePartial(seqNumInfo, parent_span);
   } else {
+    parent_span->Log("path", CommitPathToMDCString(firstPath));
     sendPartialProof(seqNumInfo, parent_span);
   }
 }
