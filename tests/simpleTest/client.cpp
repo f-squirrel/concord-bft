@@ -40,6 +40,8 @@ logging::Logger clientLogger = logging::getLogger("simpletest.client");
 void parse_params(int argc, char **argv, ClientParams &cp, bftEngine::SimpleClientParams &scp) {
   if (argc < 2) return;
 
+  int a = 0;
+  ++a;
   uint16_t min16_t_u = std::numeric_limits<uint16_t>::min();
   uint16_t max16_t_u = std::numeric_limits<uint16_t>::max();
   uint32_t min32_t = std::numeric_limits<uint32_t>::min();
