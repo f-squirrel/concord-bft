@@ -14,6 +14,7 @@
 // These tests are used as basic regression tests for meta data persistency
 
 #include "assertUtils.hpp"
+
 #include "gtest/gtest.h"
 #include <vector>
 #include "Logger.hpp"
