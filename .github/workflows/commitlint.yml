@@ -7,7 +7,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0
+          fetch-depth: 10
       - uses: wagoid/commitlint-github-action@v2
         with:
           helpUrl: https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional#rules
