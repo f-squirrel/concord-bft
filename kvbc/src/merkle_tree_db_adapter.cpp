@@ -25,6 +25,7 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 
 namespace concord::kvbc::v2MerkleTree {
@@ -93,12 +94,12 @@ auto hash(const Sliver &buf) {
   return hasher.hash(buf.data(), buf.length());
 }
 
-template <typename VersionExtractor>
+template <typename VersionT, typename VersionExtractorT>
 KeysVector keysForVersion(const std::shared_ptr<IDBClient> &db,
                           const Key &firstKey,
-                          const Version &version,
+                          const VersionT &version,
                           EKeySubtype keySubtype,
-                          const VersionExtractor &extractVersion) {
+                          const VersionExtractorT &extractVersion) {
   TimeRecorder scoped(*histograms.dba_keys_for_version);
   auto keys = KeysVector{};
   auto iter = db->getIteratorGuard();
@@ -137,16 +138,25 @@ DBAdapter::DBAdapter(const std::shared_ptr<IDBClient> &db,
   }
 }
 
+std::optional<std::pair<Value, BlockId>> DBAdapter::getValueForNonProvableKey(const Key &key,
+                                                                              const BlockId &blockVersion) const {
+  const auto &blockKey = DBKeyManipulator::genNonProvableBlockDbKey(blockVersion, key);
+  auto iter = db_->getIteratorGuard();
+  const auto [foundBlockKey, foundBlockValue] = iter->seekAtMost(blockKey);
+  if (!foundBlockKey.empty() && DBKeyManipulator::getDBKeyType(foundBlockKey) == EDBKeyType::Key &&
+      DBKeyManipulator::getKeySubtype(foundBlockKey) == EKeySubtype::NonProvable) {
+    return {{foundBlockValue, DBKeyManipulator::extractBlockIdFromNonProvableKey(foundBlockKey)}};
+  }
+  return std::nullopt;
+}
+
 std::pair<Value, BlockId> DBAdapter::getValue(const Key &key, const BlockId &blockVersion) const {
   TimeRecorder scoped_timer(*histograms.dba_get_value);
   auto stateRootVersion = Version{};
   if (nonProvableKeySet_.find(key) != std::cend(nonProvableKeySet_)) {
-    const auto &blockKey = DBKeyManipulator::genNonProvableBlockDbKey(blockVersion, key);
-    auto iter = db_->getIteratorGuard();
-    const auto [foundBlockKey, foundBlockValue] = iter->seekAtMost(blockKey);
-    if (!foundBlockKey.empty() && DBKeyManipulator::getDBKeyType(foundBlockKey) == EDBKeyType::Key &&
-        DBKeyManipulator::getKeySubtype(foundBlockKey) == EKeySubtype::NonProvable) {
-      return {foundBlockValue, DBKeyManipulator::extractBlockIdFromNonProvableKey(foundBlockKey)};
+    auto ret = getValueForNonProvableKey(key, blockVersion);
+    if (ret) {
+      return std::move(ret.value());
     }
   }
   // Find a block with an ID that is less than or equal to the requested block version and extract the state root
@@ -387,6 +397,14 @@ SetOfKeyValuePairs DBAdapter::lastReachableBlockDbUpdates(const SetOfKeyValuePai
 
   for (const auto &[k, v] : non_provable_kvs) {
     dbUpdates[DBKeyManipulator::genNonProvableBlockDbKey(blockId, k)] = v;
+    if (blockId) {
+      const auto &stale_kv = getValueForNonProvableKey(k, blockId - 1);
+      if (stale_kv) {
+        const auto &nonProvableStaleKey = DBKeyManipulator::genNonProvableStaleDbKey(
+            DBKeyManipulator::genNonProvableBlockDbKey(stale_kv.value().second, k), blockId);
+        dbUpdates[nonProvableStaleKey] = Value{};
+      }
+    }
   }
 
   // update metrics
@@ -584,7 +602,14 @@ block::detail::Node DBAdapter::getBlockNode(BlockId blockId) const {
   return block::detail::parseNode(blockNodeSliver);
 }
 
-// TODO(DD): change to support BlockId
+KeysVector DBAdapter::staleIndexKeysForBlock(BlockId blockId) const {
+  return keysForVersion(db_,
+                        DBKeyManipulator::genNonProvableStaleDbKey(Key{}, blockId),
+                        blockId,
+                        EKeySubtype::NonProvableStale,
+                        [](const Key &key) { return DBKeyManipulator::extractBlockIdFromNonProvableStaleKey(key); });
+}
+
 KeysVector DBAdapter::staleIndexKeysForVersion(const Version &version) const {
   // Rely on the fact that stale keys are ordered lexicographically by version and keys with a version only precede any
   // real ones (as they are longer). Note that version-only keys don't exist in the DB and we just use them as a
@@ -623,8 +648,7 @@ KeysVector DBAdapter::lastReachableBlockKeyDeletes(BlockId blockId) const {
   // Clear the stale index for the last version.
   add(keysToDelete, staleIndexKeysForVersion(blockNode.stateRootVersion));
 
-  // TODO(DD): Add to keysToDelete the NonProvable keys and NonProvableStale(if any).
-  // key_type|NonProvableStale|stale_since_version|
+  add(keysToDelete, staleIndexKeysForBlock(blockId));
 
   return keysToDelete;
 }
@@ -642,10 +666,15 @@ KeysVector DBAdapter::genesisBlockKeyDeletes(BlockId blockId) const {
     keysToDelete.push_back(DBKeyManipulator::extractKeyFromStaleKey(staleKey));
   }
 
-  // TODO(DD): Iterate over the NonProvableStale keys and add them to keysToDelete.
-
   // Clear the stale index for the last version.
   add(keysToDelete, staleKeys);
+  const auto &nonProvableKeys = staleIndexKeysForBlock(blockId);
+
+  // Clear the non-provable stale index for the last version.
+  add(keysToDelete, nonProvableKeys);
+  for (const auto &k : nonProvableKeys) {
+    keysToDelete.push_back(DBKeyManipulator::extractKeyFromNonProvableStaleKey(k));
+  }
 
   return keysToDelete;
 }

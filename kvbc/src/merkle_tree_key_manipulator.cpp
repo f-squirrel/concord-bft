@@ -65,6 +65,10 @@ Key DBKeyManipulator::genStaleDbKey(const Version &staleSinceVersion) {
   return serialize(EKeySubtype::ProvableStale, staleSinceVersion.value());
 }
 
+Key DBKeyManipulator::genNonProvableStaleDbKey(const Key &key, BlockId staleSinceBlock) {
+  return serialize(EKeySubtype::NonProvableStale, staleSinceBlock) + key.toString();
+}
+
 Key DBKeyManipulator::generateSTTempBlockKey(BlockId blockId) { return serialize(EBFTSubtype::STTempBlock, blockId); }
 
 BlockId DBKeyManipulator::extractBlockIdFromNonProvableKey(const Key &key) {
@@ -111,11 +115,27 @@ Version DBKeyManipulator::extractVersionFromStaleKey(const Key &key) {
   return fromBigEndianBuffer<Version::Type>(key.data() + keyTypeOffset);
 }
 
+BlockId DBKeyManipulator::extractBlockIdFromNonProvableStaleKey(const Key &key) {
+  constexpr auto keyTypeOffset = sizeof(EDBKeyType) + sizeof(EKeySubtype);
+  ConcordAssert(key.length() >= keyTypeOffset + sizeof(BlockId));
+  ConcordAssert(DBKeyManipulator::getDBKeyType(key) == EDBKeyType::Key);
+  ConcordAssert(DBKeyManipulator::getKeySubtype(key) == EKeySubtype::NonProvableStale);
+  return fromBigEndianBuffer<BlockId>(key.data() + keyTypeOffset);
+}
+
 Key DBKeyManipulator::extractKeyFromStaleKey(const Key &key) {
   constexpr auto keyOffset = sizeof(EDBKeyType) + sizeof(EKeySubtype) + Version::SIZE_IN_BYTES;
   ConcordAssert(key.length() > keyOffset);
   ConcordAssert(DBKeyManipulator::getDBKeyType(key) == EDBKeyType::Key);
   ConcordAssert(DBKeyManipulator::getKeySubtype(key) == EKeySubtype::ProvableStale);
+  return Key{key, keyOffset, key.length() - keyOffset};
+}
+
+Key DBKeyManipulator::extractKeyFromNonProvableStaleKey(const Key &key) {
+  constexpr auto keyOffset = sizeof(EDBKeyType) + sizeof(EKeySubtype) + sizeof(BlockId);
+  ConcordAssert(key.length() > keyOffset);
+  ConcordAssert(DBKeyManipulator::getDBKeyType(key) == EDBKeyType::Key);
+  ConcordAssert(DBKeyManipulator::getKeySubtype(key) == EKeySubtype::NonProvableStale);
   return Key{key, keyOffset, key.length() - keyOffset};
 }
 

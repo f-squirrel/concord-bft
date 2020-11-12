@@ -181,6 +181,8 @@ class DBAdapter : public IDbAdapter {
 
   block::detail::Node getBlockNode(BlockId blockId) const;
 
+  KeysVector staleIndexKeysForBlock(BlockId blockId) const;
+
   KeysVector staleIndexKeysForVersion(const sparse_merkle::Version &version) const;
 
   KeysVector internalKeysForVersion(const sparse_merkle::Version &version) const;
@@ -193,6 +195,8 @@ class DBAdapter : public IDbAdapter {
                                                                   const sparse_merkle::Version &version) const;
 
   void deleteKeysForBlock(const KeysVector &keys, BlockId blockId) const;
+
+  std::optional<std::pair<Value, BlockId>> getValueForNonProvableKey(const Key &key, const BlockId &blockVersion) const;
 
   class Reader : public sparse_merkle::IDBReader {
    public:
