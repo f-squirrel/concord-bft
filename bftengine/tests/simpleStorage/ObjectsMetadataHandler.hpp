@@ -30,7 +30,7 @@ class ObjectsMetadataHandler {
   MetadataObjectInfo *getObjectInfo(uint32_t objectId);
   uint32_t getObjectsNum() const { return objectsNum_; }
   MetadataObjectIdToInfoMap getObjectsMap() const { return objectsMap_; }
-  friend std::ostream &operator<<(std::ostream &stream, const ObjectsMetadataHandler &fileMetadata);
+  friend std::ostream &operator<<(std::ostream &stream, const ObjectsMetadataHandler &objectsMetadataHandler);
 
  private:
   uint32_t objectsNum_;

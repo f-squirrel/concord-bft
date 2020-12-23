@@ -30,7 +30,7 @@ class ReplicaAsksToLeaveViewMsg : public MessageBase {
   ReplicaAsksToLeaveViewMsg(ReplicaId srcReplicaId,
                             ViewNum v,
                             Reason r,
-                            uint16_t SignLen,
+                            uint16_t sigLen,
                             const concordUtils::SpanContext& spanContext = concordUtils::SpanContext{});
 
   BFTENGINE_GEN_CONSTRUCT_FROM_BASE_MESSAGE(ReplicaAsksToLeaveViewMsg)

@@ -313,7 +313,7 @@ class Cryptosystem {
    */
   static Cryptosystem* fromConfiguration(std::istream&,
                                          const std::string& prefix,
-                                         const uint16_t& replicaId,
+                                         const uint16_t& signerReplicaId,
                                          std::string& type,
                                          std::string& subtype,
                                          std::string& thrPrivateKey,

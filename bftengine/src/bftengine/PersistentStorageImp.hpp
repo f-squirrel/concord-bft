@@ -195,10 +195,10 @@ class PersistentStorageImp : public PersistentStorage {
   void setMsgInSeqNumWindow(SeqNum seqNum, SeqNum parameterId, MessageBase *msg, size_t msgSize) const;
   void setOneByteInSeqNumWindow(SeqNum seqNum, SeqNum parameterId, uint8_t oneByte) const;
   void saveDefaultsInSeqNumWindow();
-  void setSeqNumDataElement(SeqNum index, const SeqNumData &elem) const;
+  void setSeqNumDataElement(SeqNum index, const SeqNumData &seqNumData) const;
 
   void saveDefaultsInCheckWindow();
-  void setCheckDataElement(SeqNum index, const CheckData &elem) const;
+  void setCheckDataElement(SeqNum index, const CheckData &checkData) const;
 
   SeqNum readBeginningOfActiveWindow(uint32_t index) const;
   MessageBase *readMsgFromDisk(SeqNum seqNum, SeqNum parameterId, size_t msgSize) const;

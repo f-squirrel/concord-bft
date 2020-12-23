@@ -121,7 +121,7 @@ class InMemoryDataStore : public DataStore {
                   char* outPage,
                   uint32_t copylength) override;
 
-  void deleteCoveredResPageInSmallerCheckpoints(uint64_t inCheckpoint) override;
+  void deleteCoveredResPageInSmallerCheckpoints(uint64_t inMinRelevantCheckpoint) override;
 
   ResPagesDescriptor* getResPagesDescriptor(uint64_t inCheckpoint) override;
   void free(ResPagesDescriptor*) override;

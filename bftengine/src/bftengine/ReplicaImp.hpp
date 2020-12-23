@@ -320,7 +320,7 @@ class ReplicaImp : public InternalReplicaApi, public ReplicaForStateTransfer {
 
   void onInternalMsg(InternalMessage&& msg);
   void onInternalMsg(FullCommitProofMsg* m);
-  void onInternalMsg(GetStatus& msg) const;
+  void onInternalMsg(GetStatus& status) const;
 
   PrePrepareMsg* finishAddingRequestsToPrePrepareMsg(PrePrepareMsg*& prePrepareMsg,
                                                      uint16_t maxSpaceForReqs,
@@ -363,7 +363,7 @@ class ReplicaImp : public InternalReplicaApi, public ReplicaForStateTransfer {
 
   void sendCommitPartial(SeqNum);  // TODO(GG): the argument should be a ref to SeqNumInfo
 
-  void executeReadOnlyRequest(concordUtils::SpanWrapper& parent_span, ClientRequestMsg* m);
+  void executeReadOnlyRequest(concordUtils::SpanWrapper& parent_span, ClientRequestMsg* request);
 
   void executeNextCommittedRequests(concordUtils::SpanWrapper& parent_span,
                                     SeqNum seqNumber,

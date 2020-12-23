@@ -45,11 +45,11 @@ BlsPublicParameters::BlsPublicParameters(const BlsPublicParameters &params)
   g1_copy(generator1_, params.generator1_);
   g2_copy(generator2_, const_cast<G2T &>(params.generator2_));
 }
-BlsPublicParameters &BlsPublicParameters::operator=(const BlsPublicParameters &params) {
-  securityLevel_ = params.securityLevel_;
-  schemeName_ = params.schemeName_;
-  library_ = params.library_;
-  curveType_ = params.curveType_;
+BlsPublicParameters &BlsPublicParameters::operator=(const BlsPublicParameters &other) {
+  securityLevel_ = other.securityLevel_;
+  schemeName_ = other.schemeName_;
+  library_ = other.library_;
+  curveType_ = other.curveType_;
   BLS::Relic::Library::Get();
   g1_get_gen(generator1_);
   g2_get_gen(generator2_);

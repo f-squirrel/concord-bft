@@ -17,7 +17,7 @@
 #include <ostream>
 #include <string>
 
-std::ostream& operator<<(std::ostream& out, const ISecretKey& sk) {
-  out << sk.toString();
+std::ostream& operator<<(std::ostream& out, const ISecretKey& pk) {
+  out << pk.toString();
   return out;
 }

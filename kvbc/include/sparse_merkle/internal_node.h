@@ -392,7 +392,7 @@ class BatchedInternalNode {
 
   // Remove the LeafChild at the given index. Updates of children should be set
   // to new_version.
-  RemoveResult removeLeafChild(size_t index, Version new_version, Version stored_version, size_t depth);
+  RemoveResult removeLeafChild(size_t index, Version new_version, Version removed_version, size_t depth);
 
   // Attempt to insert into an empty child.
   //

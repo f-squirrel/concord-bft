@@ -34,7 +34,7 @@ class KeyValueBlockchain {
 
   /////////////////////// Delete block ///////////////////////
 
-  bool deleteBlock(const BlockId& blockId);
+  bool deleteBlock(const BlockId& block_id);
   void deleteLastReachableBlock();
 
   /////////////////////// Raw Blocks ///////////////////////

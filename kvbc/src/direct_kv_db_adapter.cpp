@@ -376,7 +376,7 @@ DBAdapter::DBAdapter(std::shared_ptr<storage::IDBClient> db,
       lastReachableBlockId_{fetchLastReachableBlockId()},
       saveKvPairsSeparately_{save_kv_pairs_separately} {}
 
-BlockId DBAdapter::addBlock(const SetOfKeyValuePairs &kv) {
+BlockId DBAdapter::addBlock(const SetOfKeyValuePairs &updates) {
   BlockId blockId = getLastReachableBlockId() + 1;
   // Make sure the digest is zero-initialized by using {} initialization.
   auto blockDigest = BlockDigest{};
@@ -387,7 +387,7 @@ BlockId DBAdapter::addBlock(const SetOfKeyValuePairs &kv) {
   }
 
   SetOfKeyValuePairs outKv;
-  const auto block = block::detail::create(kv, outKv, blockDigest);
+  const auto block = block::detail::create(updates, outKv, blockDigest);
   if (Status s = addBlockAndUpdateMultiKey(outKv, blockId, block); !s.isOK())
     throw std::runtime_error(__PRETTY_FUNCTION__ + std::string(": failed: ") + s.toString());
 

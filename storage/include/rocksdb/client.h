@@ -122,7 +122,7 @@ class Client : public concord::storage::IDBClient {
   // If Options are not provided, try to load them from an options file.
   // If `applyOptimizations` is set, apply optimizations on top of the provided or the loaded ones.
   void initDB(bool readOnly, const std::optional<Options>&, bool applyOptimizations);
-  concordUtils::Status launchBatchJob(::rocksdb::WriteBatch& _batchJob);
+  concordUtils::Status launchBatchJob(::rocksdb::WriteBatch& batch);
   concordUtils::Status get(const concordUtils::Sliver& _key, std::string& _value) const;
   bool keyIsBefore(const concordUtils::Sliver& _lhs, const concordUtils::Sliver& _rhs) const;
 

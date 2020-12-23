@@ -56,40 +56,41 @@ void DebugPersistentStorage::setLastViewThatTransferredSeqNumbersFullyExecuted(V
   lastViewThatTransferredSeqNumbersFullyExecuted_ = view;
 }
 
-void DebugPersistentStorage::setDescriptorOfLastExitFromView(const DescriptorOfLastExitFromView &d) {
+void DebugPersistentStorage::setDescriptorOfLastExitFromView(const DescriptorOfLastExitFromView &prevViewDesc) {
   ConcordAssert(nonExecSetIsAllowed());
-  ConcordAssert(d.view >= 0);
+  ConcordAssert(prevViewDesc.view >= 0);
 
   // Here we assume that the first view is always 0
   // (even if we load the initial state from disk)
-  ConcordAssert(hasDescriptorOfLastNewView_ || d.view == 0);
+  ConcordAssert(hasDescriptorOfLastNewView_ || prevViewDesc.view == 0);
 
-  ConcordAssert(!hasDescriptorOfLastExitFromView_ || d.view > descriptorOfLastExitFromView_.view);
-  ConcordAssert(!hasDescriptorOfLastNewView_ || d.view == descriptorOfLastNewView_.view);
-  ConcordAssert(d.lastStable >= lastStableSeqNum_);
-  ConcordAssert(d.lastExecuted >= lastExecutedSeqNum_);
-  ConcordAssert(d.lastExecuted >= d.lastStable);
-  ConcordAssert(d.stableLowerBoundWhenEnteredToView >= 0 && d.lastStable >= d.stableLowerBoundWhenEnteredToView);
-  ConcordAssert(d.elements.size() <= kWorkWindowSize);
+  ConcordAssert(!hasDescriptorOfLastExitFromView_ || prevViewDesc.view > descriptorOfLastExitFromView_.view);
+  ConcordAssert(!hasDescriptorOfLastNewView_ || prevViewDesc.view == descriptorOfLastNewView_.view);
+  ConcordAssert(prevViewDesc.lastStable >= lastStableSeqNum_);
+  ConcordAssert(prevViewDesc.lastExecuted >= lastExecutedSeqNum_);
+  ConcordAssert(prevViewDesc.lastExecuted >= prevViewDesc.lastStable);
+  ConcordAssert(prevViewDesc.stableLowerBoundWhenEnteredToView >= 0 &&
+                prevViewDesc.lastStable >= prevViewDesc.stableLowerBoundWhenEnteredToView);
+  ConcordAssert(prevViewDesc.elements.size() <= kWorkWindowSize);
   ConcordAssert(hasDescriptorOfLastExitFromView_ || descriptorOfLastExitFromView_.elements.size() == 0);
-  if (d.view > 0) {
-    ConcordAssert(d.myViewChangeMsg != nullptr);
-    ConcordAssert(d.myViewChangeMsg->newView() == d.view);
+  if (prevViewDesc.view > 0) {
+    ConcordAssert(prevViewDesc.myViewChangeMsg != nullptr);
+    ConcordAssert(prevViewDesc.myViewChangeMsg->newView() == prevViewDesc.view);
     // ConcordAssert(d.myViewChangeMsg->idOfGeneratedReplica() == myId); TODO(GG): add
-    ConcordAssert(d.myViewChangeMsg->lastStable() <= d.lastStable);
+    ConcordAssert(prevViewDesc.myViewChangeMsg->lastStable() <= prevViewDesc.lastStable);
   } else {
-    ConcordAssert(d.myViewChangeMsg == nullptr);
+    ConcordAssert(prevViewDesc.myViewChangeMsg == nullptr);
   }
 
-  std::vector<ViewsManager::PrevViewInfo> clonedElements(d.elements.size());
+  std::vector<ViewsManager::PrevViewInfo> clonedElements(prevViewDesc.elements.size());
 
-  for (size_t i = 0; i < d.elements.size(); i++) {
-    const ViewsManager::PrevViewInfo &e = d.elements[i];
+  for (size_t i = 0; i < prevViewDesc.elements.size(); i++) {
+    const ViewsManager::PrevViewInfo &e = prevViewDesc.elements[i];
     ConcordAssert(e.prePrepare != nullptr);
     ConcordAssert(e.prePrepare->seqNumber() >= lastStableSeqNum_ + 1);
     ConcordAssert(e.prePrepare->seqNumber() <= lastStableSeqNum_ + kWorkWindowSize);
-    ConcordAssert(e.prePrepare->viewNumber() == d.view);
-    ConcordAssert(e.prepareFull == nullptr || e.prepareFull->viewNumber() == d.view);
+    ConcordAssert(e.prePrepare->viewNumber() == prevViewDesc.view);
+    ConcordAssert(e.prepareFull == nullptr || e.prepareFull->viewNumber() == prevViewDesc.view);
     ConcordAssert(e.prepareFull == nullptr || e.prepareFull->seqNumber() == e.prePrepare->seqNumber());
 
     PrePrepareMsg *clonedPrePrepareMsg = nullptr;
@@ -110,7 +111,8 @@ void DebugPersistentStorage::setDescriptorOfLastExitFromView(const DescriptorOfL
   }
 
   ViewChangeMsg *clonedViewChangeMsg = nullptr;
-  if (d.myViewChangeMsg != nullptr) clonedViewChangeMsg = (ViewChangeMsg *)d.myViewChangeMsg->cloneObjAndMsg();
+  if (prevViewDesc.myViewChangeMsg != nullptr)
+    clonedViewChangeMsg = (ViewChangeMsg *)prevViewDesc.myViewChangeMsg->cloneObjAndMsg();
 
   // delete messages from previous descriptor
   for (size_t i = 0; i < descriptorOfLastExitFromView_.elements.size(); i++) {
@@ -122,37 +124,42 @@ void DebugPersistentStorage::setDescriptorOfLastExitFromView(const DescriptorOfL
   if (descriptorOfLastExitFromView_.myViewChangeMsg != nullptr) delete descriptorOfLastExitFromView_.myViewChangeMsg;
 
   hasDescriptorOfLastExitFromView_ = true;
-  descriptorOfLastExitFromView_ = DescriptorOfLastExitFromView{
-      d.view, d.lastStable, d.lastExecuted, clonedElements, clonedViewChangeMsg, d.stableLowerBoundWhenEnteredToView};
+  descriptorOfLastExitFromView_ = DescriptorOfLastExitFromView{prevViewDesc.view,
+                                                               prevViewDesc.lastStable,
+                                                               prevViewDesc.lastExecuted,
+                                                               clonedElements,
+                                                               clonedViewChangeMsg,
+                                                               prevViewDesc.stableLowerBoundWhenEnteredToView};
 }
 
-void DebugPersistentStorage::setDescriptorOfLastNewView(const DescriptorOfLastNewView &d) {
+void DebugPersistentStorage::setDescriptorOfLastNewView(const DescriptorOfLastNewView &prevViewDesc) {
   ConcordAssert(nonExecSetIsAllowed());
-  ConcordAssert(d.view >= 1);
+  ConcordAssert(prevViewDesc.view >= 1);
   ConcordAssert(hasDescriptorOfLastExitFromView_);
-  ConcordAssert(d.view > descriptorOfLastExitFromView_.view);
+  ConcordAssert(prevViewDesc.view > descriptorOfLastExitFromView_.view);
 
-  ConcordAssert(d.newViewMsg != nullptr);
-  ConcordAssert(d.newViewMsg->newView() == d.view);
+  ConcordAssert(prevViewDesc.newViewMsg != nullptr);
+  ConcordAssert(prevViewDesc.newViewMsg->newView() == prevViewDesc.view);
 
-  ConcordAssert(d.myViewChangeMsg == nullptr || d.myViewChangeMsg->newView() == d.view);
+  ConcordAssert(prevViewDesc.myViewChangeMsg == nullptr ||
+                prevViewDesc.myViewChangeMsg->newView() == prevViewDesc.view);
 
   const size_t numOfVCMsgs = 2 * fVal_ + 2 * cVal_ + 1;
 
-  ConcordAssert(d.viewChangeMsgs.size() == numOfVCMsgs);
+  ConcordAssert(prevViewDesc.viewChangeMsgs.size() == numOfVCMsgs);
 
   std::vector<ViewChangeMsg *> clonedViewChangeMsgs(numOfVCMsgs);
 
   for (size_t i = 0; i < numOfVCMsgs; i++) {
-    const ViewChangeMsg *vc = d.viewChangeMsgs[i];
+    const ViewChangeMsg *vc = prevViewDesc.viewChangeMsgs[i];
     ConcordAssert(vc != nullptr);
-    ConcordAssert(vc->newView() == d.view);
-    ConcordAssert(d.myViewChangeMsg == nullptr ||
-                  d.myViewChangeMsg->idOfGeneratedReplica() != vc->idOfGeneratedReplica());
+    ConcordAssert(vc->newView() == prevViewDesc.view);
+    ConcordAssert(prevViewDesc.myViewChangeMsg == nullptr ||
+                  prevViewDesc.myViewChangeMsg->idOfGeneratedReplica() != vc->idOfGeneratedReplica());
 
     Digest digestOfVCMsg;
     vc->getMsgDigest(digestOfVCMsg);
-    ConcordAssert(d.newViewMsg->includesViewChangeFromReplica(vc->idOfGeneratedReplica(), digestOfVCMsg));
+    ConcordAssert(prevViewDesc.newViewMsg->includesViewChangeFromReplica(vc->idOfGeneratedReplica(), digestOfVCMsg));
 
     ViewChangeMsg *clonedVC = (ViewChangeMsg *)vc->cloneObjAndMsg();
     ConcordAssert(clonedVC->type() == MsgCode::ViewChange);
@@ -161,11 +168,12 @@ void DebugPersistentStorage::setDescriptorOfLastNewView(const DescriptorOfLastNe
 
   // TODO(GG): check thay we a message with the id of the current replica
 
-  NewViewMsg *clonedNewViewMsg = (NewViewMsg *)d.newViewMsg->cloneObjAndMsg();
+  NewViewMsg *clonedNewViewMsg = (NewViewMsg *)prevViewDesc.newViewMsg->cloneObjAndMsg();
   ConcordAssert(clonedNewViewMsg->type() == MsgCode::NewView);
 
   ViewChangeMsg *clonedMyViewChangeMsg = nullptr;
-  if (d.myViewChangeMsg != nullptr) clonedMyViewChangeMsg = (ViewChangeMsg *)d.myViewChangeMsg->cloneObjAndMsg();
+  if (prevViewDesc.myViewChangeMsg != nullptr)
+    clonedMyViewChangeMsg = (ViewChangeMsg *)prevViewDesc.myViewChangeMsg->cloneObjAndMsg();
 
   if (hasDescriptorOfLastNewView_) {
     // delete messages from previous descriptor
@@ -180,23 +188,24 @@ void DebugPersistentStorage::setDescriptorOfLastNewView(const DescriptorOfLastNe
   }
 
   hasDescriptorOfLastNewView_ = true;
-  descriptorOfLastNewView_ = DescriptorOfLastNewView{d.view,
+  descriptorOfLastNewView_ = DescriptorOfLastNewView{prevViewDesc.view,
                                                      clonedNewViewMsg,
                                                      clonedViewChangeMsgs,
                                                      clonedMyViewChangeMsg,
-                                                     d.stableLowerBoundWhenEnteredToView,
-                                                     d.maxSeqNumTransferredFromPrevViews};
+                                                     prevViewDesc.stableLowerBoundWhenEnteredToView,
+                                                     prevViewDesc.maxSeqNumTransferredFromPrevViews};
 }
 
-void DebugPersistentStorage::setDescriptorOfLastExecution(const DescriptorOfLastExecution &d) {
+void DebugPersistentStorage::setDescriptorOfLastExecution(const DescriptorOfLastExecution &prevViewDesc) {
   ConcordAssert(setIsAllowed());
-  ConcordAssert(!hasDescriptorOfLastExecution_ || descriptorOfLastExecution_.executedSeqNum < d.executedSeqNum);
-  ConcordAssert(lastExecutedSeqNum_ + 1 == d.executedSeqNum);
-  ConcordAssert(d.validRequests.numOfBits() >= 1);
-  ConcordAssert(d.validRequests.numOfBits() <= maxNumOfRequestsInBatch);
+  ConcordAssert(!hasDescriptorOfLastExecution_ ||
+                descriptorOfLastExecution_.executedSeqNum < prevViewDesc.executedSeqNum);
+  ConcordAssert(lastExecutedSeqNum_ + 1 == prevViewDesc.executedSeqNum);
+  ConcordAssert(prevViewDesc.validRequests.numOfBits() >= 1);
+  ConcordAssert(prevViewDesc.validRequests.numOfBits() <= maxNumOfRequestsInBatch);
 
   hasDescriptorOfLastExecution_ = true;
-  descriptorOfLastExecution_ = DescriptorOfLastExecution{d.executedSeqNum, d.validRequests};
+  descriptorOfLastExecution_ = DescriptorOfLastExecution{prevViewDesc.executedSeqNum, prevViewDesc.validRequests};
 }
 
 void DebugPersistentStorage::setLastStableSeqNum(SeqNum seqNum) {

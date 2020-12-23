@@ -49,7 +49,7 @@ class ClientsManager : public ResPagesClient<ClientsManager, 0> {
 
   bool isValidClient(NodeIdType clientId) const;
 
-  void getInfoAboutLastReplyToClient(NodeIdType clientId, ReqId& outseqNumber, Time& outSentTime);
+  void getInfoAboutLastReplyToClient(NodeIdType clientId, ReqId& outseqNumber, Time& outLatestTime);
 
   ClientReplyMsg* allocateNewReplyMsgAndWriteToStorage(
       NodeIdType clientId, ReqId requestSeqNum, uint16_t currentPrimaryId, char* reply, uint32_t replyLength);

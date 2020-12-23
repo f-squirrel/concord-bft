@@ -308,7 +308,7 @@ void Cryptosystem::writeConfiguration(std::ostream& output, const std::string& p
 
 Cryptosystem* Cryptosystem::fromConfiguration(std::istream& input,
                                               const std::string& prefix,
-                                              const uint16_t& signerIndex,
+                                              const uint16_t& signerReplicaId,
                                               std::string& type,
                                               std::string& subtype,
                                               std::string& thrPrivateKey,
@@ -336,7 +336,7 @@ Cryptosystem* Cryptosystem::fromConfiguration(std::istream& input,
 
   thrVerificationKeys.insert(thrVerificationKeys.begin(), "");
   sys->loadKeys(thrPublicKey, thrVerificationKeys);
-  sys->loadPrivateKey(signerIndex, thrPrivateKey);
+  sys->loadPrivateKey(signerReplicaId, thrPrivateKey);
 
   return sys;
 }

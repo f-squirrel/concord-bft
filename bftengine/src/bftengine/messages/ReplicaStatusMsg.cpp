@@ -57,22 +57,25 @@ ReplicaStatusMsg::ReplicaStatusMsg(ReplicaId senderId,
                                    SeqNum lastExecutedSeqNum,
                                    bool viewIsActive,
                                    bool hasNewChangeMsg,
-                                   bool listOfPPInActiveWindow,
-                                   bool listOfMissingVCForVC,
-                                   bool listOfMissingPPForVC,
+                                   bool listOfPrePrepareMsgsInActiveWindow,
+                                   bool listOfMissingViewChangeMsgForViewChange,
+                                   bool listOfMissingPrePrepareMsgForViewChange,
                                    const concordUtils::SpanContext& spanContext)
     : MessageBase(senderId,
                   MsgCode::ReplicaStatus,
                   spanContext.data().size(),
-                  calcSizeOfReplicaStatusMsg(
-                      viewIsActive, listOfPPInActiveWindow, listOfMissingVCForVC, listOfMissingPPForVC)) {
+                  calcSizeOfReplicaStatusMsg(viewIsActive,
+                                             listOfPrePrepareMsgsInActiveWindow,
+                                             listOfMissingViewChangeMsgForViewChange,
+                                             listOfMissingPrePrepareMsgForViewChange)) {
   ConcordAssert(lastExecutedSeqNum >= lastStableSeqNum);
   ConcordAssert(lastStableSeqNum % checkpointWindowSize == 0);
-  ConcordAssert(!viewIsActive || hasNewChangeMsg);         // viewIsActive --> hasNewChangeMsg
-  ConcordAssert(!viewIsActive || !listOfMissingVCForVC);   // viewIsActive --> !listOfMissingVCForVC
-  ConcordAssert(!viewIsActive || !listOfMissingPPForVC);   // viewIsActive --> !listOfMissingPPForVC
-  ConcordAssert(viewIsActive || !listOfPPInActiveWindow);  // !viewIsActive --> !listOfPPInActiveWindow
-  ConcordAssert((listOfPPInActiveWindow ? 1 : 0) + (listOfMissingVCForVC ? 1 : 0) + (listOfMissingPPForVC ? 1 : 0) <=
+  ConcordAssert(!viewIsActive || hasNewChangeMsg);                           // viewIsActive --> hasNewChangeMsg
+  ConcordAssert(!viewIsActive || !listOfMissingViewChangeMsgForViewChange);  // viewIsActive --> !listOfMissingVCForVC
+  ConcordAssert(!viewIsActive || !listOfMissingPrePrepareMsgForViewChange);  // viewIsActive --> !listOfMissingPPForVC
+  ConcordAssert(viewIsActive || !listOfPrePrepareMsgsInActiveWindow);  // !viewIsActive --> !listOfPPInActiveWindow
+  ConcordAssert((listOfPrePrepareMsgsInActiveWindow ? 1 : 0) + (listOfMissingViewChangeMsgForViewChange ? 1 : 0) +
+                    (listOfMissingPrePrepareMsgForViewChange ? 1 : 0) <=
                 1);
 
   b()->viewNumber = viewNumber;
@@ -82,11 +85,11 @@ ReplicaStatusMsg::ReplicaStatusMsg(ReplicaId senderId,
   if (viewIsActive) b()->flags |= powersOf2[0];
   if (hasNewChangeMsg) b()->flags |= powersOf2[1];
 
-  if (listOfPPInActiveWindow) {
+  if (listOfPrePrepareMsgsInActiveWindow) {
     b()->flags |= powersOf2[2];
-  } else if (listOfMissingVCForVC) {
+  } else if (listOfMissingViewChangeMsgForViewChange) {
     b()->flags |= powersOf2[3];
-  } else if (listOfMissingPPForVC) {
+  } else if (listOfMissingPrePrepareMsgForViewChange) {
     b()->flags |= powersOf2[4];
   }
   std::memcpy(body() + sizeof(ReplicaStatusMsg::Header), spanContext.data().data(), spanContext.data().size());

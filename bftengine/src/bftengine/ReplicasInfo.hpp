@@ -41,12 +41,12 @@ class ReplicasInfo {
 
   bool getCollectorsForPartialProofs(const ReplicaId refReplica,
                                      const ViewNum v,
-                                     const SeqNum n,
+                                     const SeqNum seq,
                                      int8_t* outNumOfCollectors,
                                      ReplicaId* outCollectorsArray) const;
 
   bool getCollectorsForPartialProofs(const ViewNum v,
-                                     const SeqNum n,
+                                     const SeqNum seq,
                                      int8_t* outNumOfCollectors,
                                      ReplicaId* outCollectorsArray) const;
 
@@ -57,7 +57,7 @@ class ReplicasInfo {
   }
 
   bool getExecutionCollectors(const ViewNum v,
-                              const SeqNum n,
+                              const SeqNum seq,
                               int8_t* outNumOfCollectors,
                               ReplicaId* outCollectorsArray) const;
 

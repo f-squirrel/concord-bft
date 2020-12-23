@@ -49,10 +49,10 @@ std::string PerformanceHandler::list(const std::string& component_name) const {
   return output;
 }
 
-std::map<Name, HistogramData> PerformanceHandler::get(const std::string& name) const {
+std::map<Name, HistogramData> PerformanceHandler::get(const std::string& component) const {
   std::lock_guard<std::mutex> guard(mutex_);
   std::map<Name, HistogramData> data;
-  for (const auto& [name, histogram] : getHistograms(name)) {
+  for (const auto& [name, histogram] : getHistograms(component)) {
     data.try_emplace(name,
                      histogram.start,
                      histogram.snapshot_start,
@@ -69,18 +69,18 @@ HistogramData PerformanceHandler::get(const std::string& component_name, const s
   return HistogramData(getHistogram(component_name, histogram_name));
 }
 
-void PerformanceHandler::snapshot(const std::string& name) {
+void PerformanceHandler::snapshot(const std::string& component) {
   std::lock_guard<std::mutex> guard(mutex_);
-  for (auto& h : getHistograms(name)) {
+  for (auto& h : getHistograms(component)) {
     h.second.takeSnapshot();
   }
 }
 
-Histograms& PerformanceHandler::getHistograms(const std::string& name) {
+Histograms& PerformanceHandler::getHistograms(const std::string& component_name) {
   try {
-    return components_.at(name);
+    return components_.at(component_name);
   } catch (...) {
-    throw std::invalid_argument(std::string("Component Not Found: ") + name);
+    throw std::invalid_argument(std::string("Component Not Found: ") + component_name);
   }
 }
 

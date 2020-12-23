@@ -726,11 +726,11 @@ uint8_t PersistentStorageImp::readCompletedMarkFromDisk(SeqNum index) const {
   return completedMark;
 }
 
-CheckpointMsg *PersistentStorageImp::readCheckpointMsgFromDisk(SeqNum index) const {
+CheckpointMsg *PersistentStorageImp::readCheckpointMsgFromDisk(SeqNum seqNum) const {
   const size_t bufLen = CheckData::maxSize();
   UniquePtrToChar buf(new char[bufLen]);
   uint32_t actualMsgSize = 0;
-  const SeqNum convertedIndex = BEGINNING_OF_CHECK_WINDOW + CHECKPOINT_MSG + convertCheckWindowIndex(index);
+  const SeqNum convertedIndex = BEGINNING_OF_CHECK_WINDOW + CHECKPOINT_MSG + convertCheckWindowIndex(seqNum);
   ConcordAssert(convertedIndex < WIN_PARAMETERS_NUM);
   LOG_DEBUG(GL, "PersistentStorageImp::readCheckpointMsgFromDisk convertedIndex=" << convertedIndex);
   metadataStorage_->read(convertedIndex, bufLen, buf.get(), actualMsgSize);

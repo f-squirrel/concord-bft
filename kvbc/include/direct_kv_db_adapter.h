@@ -122,7 +122,7 @@ class DBKeyManipulator {
  */
 class DBAdapter : public IDbAdapter {
  public:
-  DBAdapter(std::shared_ptr<storage::IDBClient> dataStore,
+  DBAdapter(std::shared_ptr<storage::IDBClient> db,
             std::unique_ptr<IDataKeyGenerator> keyGen = std::make_unique<RocksKeyGenerator>(),
             bool use_mdt = false,
             bool save_kv_pairs_separately = true);

@@ -45,7 +45,7 @@ class SerializableActiveWindow {
 
   bool insideActiveWindow(const SeqNum &num) const;
 
-  static bool insideActiveWindow(const SeqNum &num, const SeqNum &newFirstIndex);
+  static bool insideActiveWindow(const SeqNum &num, const SeqNum &beginningOfActiveWindow);
 
   ItemType &get(const SeqNum &num);
 

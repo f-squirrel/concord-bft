@@ -28,7 +28,7 @@ namespace Relic {
 class BlsMultisigAccumulator : public BlsAccumulatorBase {
  protected:
  public:
-  BlsMultisigAccumulator(const std::vector<BlsPublicKey>& vks,
+  BlsMultisigAccumulator(const std::vector<BlsPublicKey>& verifKeys,
                          NumSharesType reqSigners,
                          NumSharesType totalSigners,
                          bool withShareVerification);
@@ -44,7 +44,7 @@ class BlsMultisigAccumulator : public BlsAccumulatorBase {
  public:
   virtual void aggregateShares();
 
-  virtual void sigToBytes(unsigned char* buf, int len) const;
+  virtual void sigToBytes(unsigned char* outThreshSig, int threshSigLen) const;
 };
 
 } /* namespace Relic */

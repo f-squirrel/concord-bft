@@ -42,7 +42,7 @@ class BlsAccumulatorBase : public ThresholdAccumulatorBase<BlsPublicKey, G1T, Bl
   bool shareVerificationEnabled;
 
  public:
-  BlsAccumulatorBase(const std::vector<BlsPublicKey>& vks,
+  BlsAccumulatorBase(const std::vector<BlsPublicKey>& verifKeys,
                      NumSharesType reqSigners,
                      NumSharesType totalSigners,
                      bool withShareVerification);
