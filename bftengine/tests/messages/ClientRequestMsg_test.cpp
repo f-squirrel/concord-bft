@@ -88,7 +88,7 @@ TEST(ClientRequestMsg, create_and_compare_with_empty_cid) {
   uint64_t reqSeqNum = 100u;
   const char request[] = {"request body"};
   const uint64_t requestTimeoutMilli = 0;
-  const std::string correlationId = "";
+  const std::string correlationId;
   const char rawSpanContext[] = {""};
   const std::string spanContext{rawSpanContext, sizeof(rawSpanContext)};
   ClientRequestMsg msg(senderId,

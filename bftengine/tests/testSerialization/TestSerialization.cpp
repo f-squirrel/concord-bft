@@ -121,9 +121,9 @@ void testCheckWindowSetUp(const SeqNum shift, bool toSet) {
   }
 
   auto checkWindowPtr = persistentStorageImp->getCheckWindow();
-  CheckData &element0 = checkWindowPtr.get()->getByRealIndex(0);
-  CheckData &element1 = checkWindowPtr.get()->getByRealIndex(1);
-  CheckData &element2 = checkWindowPtr.get()->getByRealIndex(2);
+  CheckData &element0 = checkWindowPtr->getByRealIndex(0);
+  CheckData &element1 = checkWindowPtr->getByRealIndex(1);
+  CheckData &element2 = checkWindowPtr->getByRealIndex(2);
 
   if (!shift) {
     ConcordAssert(element0.getCheckpointMsg()->equals(checkpointInitialMsg0));
@@ -181,7 +181,7 @@ void testSeqNumWindowSetUp(const SeqNum shift, bool toSet) {
   const SeqNumData emptySeqNumData;
   for (SeqNum i = 0; i < kWorkWindowSize; ++i) {
     ++shiftedSeqNum;
-    SeqNumData &element = seqNumWindowPtr.get()->getByRealIndex(i);
+    SeqNumData &element = seqNumWindowPtr->getByRealIndex(i);
     PrePrepareMsg *prePrepareMsg = element.getPrePrepareMsg();
     FullCommitProofMsg *fullCommitProofMsg = element.getFullCommitProofMsg();
     PrepareFullMsg *prepareFullMsg = element.getPrepareFullMsg();

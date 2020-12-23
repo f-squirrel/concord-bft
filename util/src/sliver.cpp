@@ -85,9 +85,9 @@ char Sliver::operator[](const size_t offset) const {
   // The data for the requested offset is that many bytes after the offset from
   // the base sliver.
   if (std::holds_alternative<shared_ptr<StringBuf>>(data_)) {
-    return std::get<shared_ptr<StringBuf>>(data_)->s.data()[total_offset];
+    return std::get<shared_ptr<StringBuf>>(data_)->s[total_offset];
   } else {
-    return std::get<shared_ptr<const char[]>>(data_).get()[total_offset];
+    return std::get<shared_ptr<const char[]>>(data_)[total_offset];
   }
 }
 

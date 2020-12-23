@@ -84,7 +84,7 @@ void ViewChangeMsgTests(bool bAddElements, bool bAddComplaints, const std::strin
       EXPECT_EQ(msg_complaint->viewNumber(), viewNum);
       EXPECT_EQ(msg_complaint->reason(), ReplicaAsksToLeaveViewMsg::Reason::ClientRequestTimeout);
 
-      testMessageBaseMethods(*msg_complaint.get(), MsgCode::ReplicaAsksToLeaveView, sender, spanContext);
+      testMessageBaseMethods(*msg_complaint, MsgCode::ReplicaAsksToLeaveView, sender, spanContext);
 
       EXPECT_NO_THROW(msg_complaint->validate(replicaInfo));
 
@@ -258,7 +258,7 @@ void ViewChangeMsgAddRemoveComplaints(const std::string& spanContext = "", int t
       EXPECT_EQ(msg_complaint->viewNumber(), viewNum);
       EXPECT_EQ(msg_complaint->reason(), ReplicaAsksToLeaveViewMsg::Reason::ClientRequestTimeout);
 
-      testMessageBaseMethods(*msg_complaint.get(), MsgCode::ReplicaAsksToLeaveView, sender, spanContext);
+      testMessageBaseMethods(*msg_complaint, MsgCode::ReplicaAsksToLeaveView, sender, spanContext);
 
       EXPECT_NO_THROW(msg_complaint->validate(replicaInfo));
 

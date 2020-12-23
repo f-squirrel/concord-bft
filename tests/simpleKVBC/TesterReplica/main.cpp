@@ -70,7 +70,7 @@ void run_replica(int argc, char** argv) {
 using namespace std;
 
 namespace {
-static void signal_handler(int signal_num) {
+void signal_handler(int signal_num) {
   LOG_INFO(GL, "Program received signal " << signal_num);
   concord::kvbc::test::timeToExit = true;
 }

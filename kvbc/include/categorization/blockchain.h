@@ -69,7 +69,7 @@ class Blockchain {
     if (!block) {
       return std::optional<RawBlock>{};
     }
-    return RawBlock(block.value(), *native_client_.get());
+    return RawBlock(block.value(), *native_client_);
   }
 
   /////////////////////// State transfer Block chain ///////////////////////

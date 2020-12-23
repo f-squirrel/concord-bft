@@ -91,7 +91,7 @@ std::string S3KeyGenerator::string2hex(const std::string &s) {
 std::string S3KeyGenerator::hex2string(const std::string &s) {
   std::string result;
   result.reserve(s.length() / 2);
-  for (size_t i = 0; i < s.length(); i += 2) result.push_back(std::stoi(s.substr(i, 2).c_str(), NULL, 16));
+  for (size_t i = 0; i < s.length(); i += 2) result.push_back(std::stoi(s.substr(i, 2), NULL, 16));
   return result;
 }
 

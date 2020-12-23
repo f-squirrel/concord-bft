@@ -55,7 +55,7 @@ void testIth() {
 }
 
 void assertCorrectSerialization(const VectorOfShares& vec) {
-  AutoBuf<unsigned char> buf(vec.getByteCount());
+  AutoBuf<unsigned char> buf(VectorOfShares::getByteCount());
   vec.toBytes(buf, buf.size());
 
   // LOG_DEBUG(THRESHSIGN_LOG, "Serialized vector " << vec << " to " << Utils::bin2hex(buf, buf.size()));

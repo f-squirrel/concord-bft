@@ -37,7 +37,7 @@ inline T readValue(std::istream& input, const std::string& name) {
     // std::cout << __PRETTY_FUNCTION__ << "(name = " << name << ") line [" << line << "]" << std::endl;
     if (line.length() == 0) continue;  // empty line
     if (line[0] == '#') continue;      // comment
-    if (size_t pos = line.find(':'); pos != line.npos) {
+    if (size_t pos = line.find(':'); pos != std::string::npos) {
       std::string key = line.substr(0, pos);
       // NOLINTNEXTLINE(performance-inefficient-string-concatenation)
       if (key != name) throw std::runtime_error("expected key: " + name + std::string(" found: ") + key);
@@ -74,7 +74,7 @@ inline std::vector<T> readCollection(std::istream& input, const std::string& nam
     if (line[0] == '#') continue;   // comment
     if (line[0] != '-')
       throw std::runtime_error("invalid syntax for list item, should start from \'-\'" + std::string(": ") + line);
-    if (size_t pos = line.find(' '); pos != line.npos) {
+    if (size_t pos = line.find(' '); pos != std::string::npos) {
       result.push_back(to<T>(line.substr(pos + 1)));
     } else {
       // NOLINTNEXTLINE(performance-inefficient-string-concatenation)

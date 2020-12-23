@@ -39,9 +39,9 @@ namespace {
 class TestReplicaConfig : public bftEngine::ReplicaConfig {};
 
 TestReplicaConfig replicaConfig[4] = {};
-static const int N = 4;
-static const int F = 1;
-static const int C = 0;
+constexpr int N = 4;
+constexpr int F = 1;
+constexpr int C = 0;
 ViewChangeSafetyLogic::Restriction restrictions[kWorkWindowSize];
 std::unique_ptr<bftEngine::impl::ReplicasInfo> pRepInfo;
 SigManager* sigManager_;

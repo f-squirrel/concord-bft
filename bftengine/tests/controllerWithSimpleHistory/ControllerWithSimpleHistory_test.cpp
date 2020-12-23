@@ -473,19 +473,19 @@ TEST(ControllerWithSimpleHistory, normalize_to_range) {
   ControllerWithSimpleHistory cwsh{C, F, replicaId, initialView, initialSeq};
 
   {
-    auto res = cwsh.normalizeToRange(1, 2, 3);
+    auto res = ControllerWithSimpleHistory::normalizeToRange(1, 2, 3);
     ASSERT_EQ(res, 2);
   }
   {
-    auto res = cwsh.normalizeToRange(-11, -2, 3);
+    auto res = ControllerWithSimpleHistory::normalizeToRange(-11, -2, 3);
     ASSERT_EQ(res, -2);
   }
   {
-    auto res = cwsh.normalizeToRange(1.0, 2.0, 0.5);
+    auto res = ControllerWithSimpleHistory::normalizeToRange(1.0, 2.0, 0.5);
     ASSERT_EQ(res, 1);
   }
   {
-    auto res = cwsh.normalizeToRange(1.0, 2.0, 1.5);
+    auto res = ControllerWithSimpleHistory::normalizeToRange(1.0, 2.0, 1.5);
     ASSERT_EQ(res, 1.5);
   }
 }
@@ -520,15 +520,15 @@ TEST(ControllerWithSimpleHistory, increase_slow_path_timer) {
             (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
                 ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()));
 
-  auto boundedDur = cwsh.normalizeToRange(
+  auto boundedDur = ControllerWithSimpleHistory::normalizeToRange(
       (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       longerDur);
-  boundedDur = cwsh.normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
-                                     ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
-                                     boundedDur);
+  boundedDur = ControllerWithSimpleHistory::normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
+                                                             ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
+                                                             boundedDur);
 
   // Validate that initial value is within absolute range
   ASSERT_EQ(longerDur, boundedDur);
@@ -574,15 +574,15 @@ TEST(ControllerWithSimpleHistory, decrease_slow_path_timer) {
             (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
                 ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()));
 
-  auto boundedDur = cwsh.normalizeToRange(
+  auto boundedDur = ControllerWithSimpleHistory::normalizeToRange(
       (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       shorterDur);
-  boundedDur = cwsh.normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
-                                     ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
-                                     boundedDur);
+  boundedDur = ControllerWithSimpleHistory::normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
+                                                             ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
+                                                             boundedDur);
 
   // Validate that initial value is within absolute range
   ASSERT_EQ(shorterDur, boundedDur);
@@ -621,7 +621,7 @@ TEST(ControllerWithSimpleHistory, increase_to_upper_relative_bound) {
       (ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath * 2), cwsh.timeToStartSlowPathMilli());
 
   // Get a normalized duration i.e. within relative ranges
-  auto boundedDur = cwsh.normalizeToRange(
+  auto boundedDur = ControllerWithSimpleHistory::normalizeToRange(
       (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
@@ -633,9 +633,9 @@ TEST(ControllerWithSimpleHistory, increase_to_upper_relative_bound) {
   // after normalizing the duration, which is out of the relative bounds.
   ASSERT_GT(longerDur, boundedDur);
 
-  boundedDur = cwsh.normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
-                                     ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
-                                     boundedDur);
+  boundedDur = ControllerWithSimpleHistory::normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
+                                                             ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
+                                                             boundedDur);
   auto prePrepareTime = std::chrono::steady_clock::now() - std::chrono::milliseconds(longerDur);
   // trigger adaptive tuning
   for (auto i = (size_t)1; i <= ControllerWithSimpleHistory::EvaluationPeriod; ++i) {
@@ -669,7 +669,7 @@ TEST(ControllerWithSimpleHistory, decrease_to_lower_relative_bound) {
       (ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath * 2), cwsh.timeToStartSlowPathMilli());
 
   // Get a normalized duration i.e. within relative ranges
-  auto boundedDur = cwsh.normalizeToRange(
+  auto boundedDur = ControllerWithSimpleHistory::normalizeToRange(
       (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
@@ -681,9 +681,9 @@ TEST(ControllerWithSimpleHistory, decrease_to_lower_relative_bound) {
   // after normalizing the duration, which is out of the relative bounds.
   ASSERT_LT(shorterDur, boundedDur);
 
-  boundedDur = cwsh.normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
-                                     ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
-                                     boundedDur);
+  boundedDur = ControllerWithSimpleHistory::normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
+                                                             ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
+                                                             boundedDur);
   auto prePrepareTime = std::chrono::steady_clock::now() - std::chrono::milliseconds(shorterDur);
   // trigger adaptive tuning
   for (auto i = (size_t)1; i <= ControllerWithSimpleHistory::EvaluationPeriod; ++i) {
@@ -717,15 +717,15 @@ TEST(ControllerWithSimpleHistory, low_converges) {
   uint32_t shorterDur = ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli / 2;
 
   // Get a normalized duration i.e. within relative ranges
-  auto boundedDur = cwsh.normalizeToRange(
+  auto boundedDur = ControllerWithSimpleHistory::normalizeToRange(
       (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       shorterDur);
-  boundedDur = cwsh.normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
-                                     ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
-                                     boundedDur);
+  boundedDur = ControllerWithSimpleHistory::normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
+                                                             ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
+                                                             boundedDur);
 
   // Validate that duration is shorter than lower bound
   ASSERT_LT(shorterDur, boundedDur);
@@ -774,15 +774,15 @@ TEST(ControllerWithSimpleHistory, high_converges) {
   uint32_t longerDur = ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli * 2;
 
   // Get a normalized duration i.e. within relative ranges
-  auto boundedDur = cwsh.normalizeToRange(
+  auto boundedDur = ControllerWithSimpleHistory::normalizeToRange(
       (uint32_t)ControllerWithSimpleHistory::relativeLowerBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       (uint32_t)ControllerWithSimpleHistory::relativeUpperBound(
           ControllerWithSimpleHistory::MaxUpdateInTimeToStartSlowPath, cwsh.timeToStartSlowPathMilli()),
       longerDur);
-  boundedDur = cwsh.normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
-                                     ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
-                                     boundedDur);
+  boundedDur = ControllerWithSimpleHistory::normalizeToRange(ControllerWithSimpleHistory::MinTimeToStartSlowPathMilli,
+                                                             ControllerWithSimpleHistory::MaxTimeToStartSlowPathMilli,
+                                                             boundedDur);
 
   // Validate that duration is longer than upper bound
   ASSERT_GT(longerDur, boundedDur);

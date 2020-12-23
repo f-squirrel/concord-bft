@@ -99,7 +99,7 @@ TEST_F(categorized_kvbc, reconstruct_merkle_updates) {
   auto db_get_val = db->get(cf, db_key);
   ASSERT_EQ(db_get_val.value(), db_val);
 
-  categorization::RawBlock rw(block, *db.get());
+  categorization::RawBlock rw(block, *db);
   ASSERT_EQ(rw.data.parent_digest, block.data.parent_digest);
   auto variant = rw.data.category_updates[cf];
   auto merkle_updates = std::get<MerkleUpdatesData>(variant);

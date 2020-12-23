@@ -216,7 +216,7 @@ bool InternalCommandsHandler::executeGetBlockDataCommand(
   auto *req = (SimpleGetBlockDataRequest *)request;
   LOG_INFO(m_logger, "Execute GET_BLOCK_DATA command: type=" << req->h.type << ", BlockId=" << req->block_id);
 
-  auto minRequestSize = std::max(sizeof(SimpleGetBlockDataRequest), req->size());
+  auto minRequestSize = std::max(sizeof(SimpleGetBlockDataRequest), SimpleGetBlockDataRequest::size());
   if (requestSize < minRequestSize) {
     LOG_ERROR(m_logger,
               "The message is too small: requestSize=" << requestSize << ", minRequestSize=" << minRequestSize);
