@@ -34,7 +34,7 @@ class BlsCoefficientsMap : public AlmostMultisigCoefficientsMap<BNT> {
   /**
    * When storing this object in a std::map, we need its default constructor defined.
    */
-  BlsCoefficientsMap() : AlmostMultisigCoefficientsMap<BNT>() { fieldOrder = Library::Get().getG2Order(); }
+  BlsCoefficientsMap() { fieldOrder = Library::Get().getG2Order(); }
   BlsCoefficientsMap(NumSharesType n) : AlmostMultisigCoefficientsMap<BNT>(n) {
     fieldOrder = Library::Get().getG2Order();
   }

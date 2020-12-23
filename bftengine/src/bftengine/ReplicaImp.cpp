@@ -1010,7 +1010,6 @@ void ReplicaImp::onMessage<PartialCommitProofMsg>(PartialCommitProofMsg *msg) {
   }
 
   delete msg;
-  return;
 }
 
 template <>
@@ -1063,7 +1062,6 @@ void ReplicaImp::onMessage<FullCommitProofMsg>(FullCommitProofMsg *msg) {
   }
 
   delete msg;
-  return;
 }
 
 void ReplicaImp::onInternalMsg(InternalMessage &&msg) {

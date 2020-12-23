@@ -25,7 +25,7 @@ namespace bftEngine::impl {
 IncomingMsgsStorageImp::IncomingMsgsStorageImp(std::shared_ptr<MsgHandlersRegistrator>& msgHandlersPtr,
                                                std::chrono::milliseconds msgWaitTimeout,
                                                uint16_t replicaId)
-    : IncomingMsgsStorage(), msgHandlers_(msgHandlersPtr), msgWaitTimeout_(msgWaitTimeout) {
+    : msgHandlers_(msgHandlersPtr), msgWaitTimeout_(msgWaitTimeout) {
   replicaId_ = replicaId;
   ptrProtectedQueueForExternalMessages_ = new queue<std::unique_ptr<MessageBase>>();
   ptrProtectedQueueForInternalMessages_ = new queue<InternalMessage>();

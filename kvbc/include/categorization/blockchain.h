@@ -90,7 +90,6 @@ class Blockchain {
       }
       last_block_id_.reset();
       loadLastBlockId();
-      return;
     }
 
     void loadLastBlockId() {
